@@ -84,8 +84,27 @@ class hsShader extends HTMLElement {
 
     addEvents() {
         this.handleDrag();
+        this.handleClick();
     }
-
+    
+    handleClick(){
+        let self = this;
+        ['mouseup', 'touchend'].forEach(evt =>
+            self.addEventListener(evt, function (e) {
+                let relativeTop = 0;
+                const rect = self.getBoundingClientRect();
+                if( e.type == "mouseup" ){
+                    relativeTop = e.clientY - rect.top;
+                }else{
+                    relativeTop = e.touches[0].pageY - rect.top
+                }
+                let percent = self.getPosPercent(relativeTop);
+                self.setPercent( percent );
+                return false;
+            }, false)
+        );
+    }
+  
     handleDrag() {
         let self = this;
         ['drag', 'touchmove'].forEach(evt =>
@@ -100,17 +119,23 @@ class hsShader extends HTMLElement {
                     relativeTop = e.touches[0].pageY - rect.top
                 }
                 self.updateDisplayPixel(relativeTop);
+                return false;
             }, false)
         );
 
         ['dragstart', 'touchstart', "click"].forEach(evt =>
             self.handleEl.addEventListener(evt, function (e) {
+<<<<<<< HEAD
                 let body = self.handleEl.closest(".hshModalBody");
                 if( body ){ body.style.overflow = "hidden"; }
                 if( e.type == "click" ){ return; }
                 self.setAttribute("touching",true);
                 e.dataTransfer.setDragImage(document.createElement('span'), 0, 0);
                 //e.dataTransfer.setData('jkhbku', 'anything');
+=======
+                //self.indicatorEl.classList.add("show");
+                //e.dataTransfer.setData('application/node type', this);
+>>>>>>> 8dfe25e563569fea71c98af0d0a837b275aaeefd
                 window.getSelection().removeAllRanges();
                 return false;
             }, false)
@@ -139,13 +164,17 @@ class hsShader extends HTMLElement {
 
     getPosPixel() {
         let height = this.offsetHeight;
-        return ((height / 100) * this.percent) - (this.handleHeight / 2);
+        return this.clamp( ((height / 100) * this.percent) - (this.handleHeight / 2) );
     }
 
     getPosPercent(pixel) {
+<<<<<<< HEAD
         let rawPercent = (100 / this.offsetHeight) * pixel;
         // Don't want to deal with float
         return Math.round( rawPercent );
+=======
+        return this.clamp( Math.round( (100 / this.offsetHeight) * pixel) );
+>>>>>>> 8dfe25e563569fea71c98af0d0a837b275aaeefd
     }
 
     refreshDisplayPercent() {
@@ -172,11 +201,15 @@ class hsShader extends HTMLElement {
         }
     }
 
+    clamp(val, min, max) {
+        return val > max ? max : val < min ? min : val;
+    }
+
     setPercent(percent) {
         if (percent > 100 || percent < 0) {
             console.error("[HSH-Shader] - Percent must be between 0 and 100%!");
-            return;
         }
+<<<<<<< HEAD
         this.percent = percent;
         this.refreshDisplayPercent();
     }
@@ -247,3 +280,10 @@ function patchFireFoxEventHandler(){
     })();
 }
 patchFireFoxEventHandler();
+=======
+        this.percent = this.clamp(percent,0,100);
+        this.refreshDisplayPercent();
+    }
+};
+customElements.define('hs-shader', hsShader);
+>>>>>>> 8dfe25e563569fea71c98af0d0a837b275aaeefd
