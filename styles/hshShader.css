@@ -1,102 +1,110 @@
 :root {
-    --shader_top_half_color: cornflowerblue;
-    --shader_thumb_color: #5e7cd3;
+    --shader-top-half-color: cornflowerblue;
+    --shader-thumb-color: #5e7cd3;
+    --shader_thumb-color_active: #4a66b9;
 
-    --shader_top_half_color_animate: coral;
-    --shader_thumb_color_animate: #ce5d33;
+    --shader-top-half-color-animate:  rgb(73, 177, 238);
+    --shader-thumb-color-animate:  rgb(52, 163, 214);
 
-    --group_shader_top_half_color: #4bcca1;
-    --group_shader_thumb_color: #4cbb9f;
+    --shader-top-half-color-notTeached: orangered;
+    --shader-thumb-color-notTeached: rgb(219, 58, 0);
+
+    --group-shader-top-half-color: #4bcca1;
+    --group-shader-thumb-color: #42b195;
+    --group-shader-thumb-color-active: #2f8f77;
+
+    --hsh-shader-height: 150px;
+    --hsh-shader-width: 100px;
+    --hsh-shader-handle-height: 30px;
 }
 
 hs-shader {
     position: relative;
-    width: 100px;
-    height: 150px;
+    width: var(--hsh-shader-width);
+    height: var(--hsh-shader-height);
     border-radius: 0.3em;
     box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
 
-    display: flex;
-    flex-direction: column;
+    margin: 5px 5px 35px;
 }
 
 .hs-shader-upper {
+    display: block;
     width: 100%;
     height: 50%;
-    background-color: var(--shader_top_half_color);
+    background-color: var(--shader-top-half-color);
     border-radius: 0.3em;
+}
+
+hs-shader.group .hs-shader-upper{
+    background-color: var(--group-shader-top-half-color);
+}
+
+hs-shader.notTeached .hs-shader-upper{
+    background-color: var(--shader-top-half-color-notTeached);
+}
+
+hs-shader.animating .hs-shader-upper{
+    background: var(--shader-top-half-color-animate);
+}
+
+
+span.hs-shader-name-wrap {
+    width: 100%;
+    bottom: -35px;
+    position: absolute;
+    font-size: 1.1em;
+    color: rgb(129, 129, 129);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+span.hs-shader-name{
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .hs-shader-handle {
     position: absolute;
     left: -5px;
-    top: calc(50% - 10px);
+    top: calc(50% - calc(var(--hsh-shader-handle-height)/2));
 
     display: flex;
     justify-content: center;
     align-items: center;
 
     width: 110%;
-    height: 20px;
+    height: var(--hsh-shader-handle-height);
     border-radius: 0.4em;
-    background-color: var(--shader_thumb_color);
+    background-color: var(--shader-thumb-color);
     color: white;
 
     cursor: pointer;
 }
 
-.hs-shader-percent-indicator {
-    display: none;
+hs-shader.group .hs-shader-handle{
+    background-color: var(--group-shader-thumb-color);
 }
-
-.hs-shader-percent-indicator.show {
-    z-index: 9999;
-    position: absolute;
-    right: -70px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1em;
-    opacity: 0;
-    animation: hs-shader-show-indicator 0.3s ease-in forwards;
-    width: 50px;
-    height: 40px;
-    background: cornflowerblue;
-    -moz-border-radius: 10px;
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+hs-shader.notTeached .hs-shader-handle{
+    background-color: var(--shader-thumb-color-notTeached);
+}
+hs-shader.animating .hs-shader-handle{
+    background: var(--shader-thumb-color-animate);
 }
 
 .hs-shader-percent-holder{
     pointer-events: none;
 }
 
-@keyframes hs-shader-show-indicator {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
+.hs-shader-handle:hover, .hs-shader-handle:active {
+    background-color: var(--shader_thumb-color_active);
 }
 
-.hs-shader-percent-indicator::before {
-    content: "";
-    position: absolute;
-    right: 100%;
-    top: 10px;
-    width: 0;
-    height: 0;
-    border-top: 10px solid transparent;
-    border-right: 20px solid cornflowerblue;
-    border-bottom: 10px solid transparent;
-}
-
-.hs-shader-handle:hover {
-    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+hs-shader.group .hsh-shader-handle:hover, hs-shader.group .hsh-shader-handle:active{
+    background-color: var(--group-shader-thumb-color-active);
 }
 
 .noselect {

@@ -9,12 +9,25 @@
     <link rel="stylesheet" href="/styles/hshShader.css">
     <link rel="stylesheet" href="/test.css">
 
-    <script src="/scripts/hshShader.js" defer></script>
+    <script defer src="/scripts/hshShader.js" defer></script>
+    <script defer src="/test.js"></script>
 </head>
 <body>
-    
-    <hs-shader id="test" percent="50"></hs-shader>
-    <!-- <hs-shader id="test2" percent="30"></hs-shader> -->
+
+    <div class="box">
+        <span class="shDisp" target="#test"></span>
+        <span class="shDisp" target="#test2"></span>
+    </div>
+
+    <hs-shader class="group" id="test" name="Group" percent="50"></hs-shader>
+    <hs-shader class="notTeached" id="test1" name="Test 1" percent="50"></hs-shader>
+    <hs-shader class="" id="test2" name="Test 2" percent="30"></hs-shader>
+    <hs-shader class="" id="test3" name="Test 3" percent="50"></hs-shader>
+    <hs-shader class="" id="test4" name="Test 4" percent="50"></hs-shader>
+    <hs-shader class="" id="test5" name="Test 5"></hs-shader>
+    <hs-shader class="" id="test6" name="Test 6" percent="50"></hs-shader>
+    <hs-shader class="" id="test7" name="Test 7" percent="30"></hs-shader>
+    <hs-shader class="" id="test8" name="Test 8" percent="50"></hs-shader>
 
 </body>
 </html>

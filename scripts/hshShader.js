@@ -1,40 +1,81 @@
 class hsShader extends HTMLElement {
-    // <span class="hs-shader-percent-indicator show">50%</span>
     template = `
         <span class="hs-shader-upper"></span>
-        <span class="hs-shader-handle">
-            <span class="hs-shader-percent-holder">50%</span>
-        </span>`;
+        <span class="hs-shader-handle" draggable="true">
+            <span draggable="false" class="hs-shader-percent-holder noselect"></span>
+        </span>
+        <span class="hs-shader-name-wrap">
+            <span class="hs-shader-name"></span>
+        </span>
+    `;
+    minHandleHeight = 20;
     percent = 50;
-    handleHeight = 10;
+    handleHeight = 25;
+    reverseCompute = false;
+    isGroup = false;
+    notTeached = true;
 
     handleEl = null;
-    //indicatorEl = null;
     upperHalfEl = null;
+
+    userEvents = {
+        "drag" : null,
+        "stop" : null
+    };
+
     connectedCallback() {
         this.id = this.getAttribute("id");
         if (!this.id || this.id === "") {
             console.error("[HSH-Shader] - Shader should have an ID.");
             return;
         }
-
+        this.cssRoot = document.querySelector(':root');
+        this.setHandleHeight( this.handleHeight );
         this.addTemplate();
         this.getElements();
         this.getAttributes();
         this.addEvents();
     }
 
+    on(event,cb){
+        if( !this.userEvents.hasOwnProperty(event) ){
+            console.error(`[HSH-Shader] - No such event as ${event}`);
+            return;
+        }
+        this.userEvents[event] = cb;
+    }
+
+    setHandleHeight( height ){
+        this.handleHeight = height;
+        if( this.handleHeight < this.minHandleHeight ){
+            this.handleHeight = this.minHandleHeight;
+            console.error(`[HSH-Shader] - Minimum handle height is ${this.minHandleHeight}px!`);
+        }
+        this.cssRoot.style.setProperty('--hsh-shader-handle-height', `${this.handleHeight}px`);
+    }
+
     getElements() {
         this.handleEl           = this.querySelector(".hs-shader-handle");
-        //this.indicatorEl = this.querySelector(".hs-shader-percent-indicator");
         this.upperHalfEl        = this.querySelector(".hs-shader-upper");
         this.percentHolderEl    = this.querySelector(".hs-shader-percent-holder");
-        this.handleHeight       = this.handleEl.offsetHeight;
+        this.nameHolder         = this.querySelector(".hs-shader-name");
+        //this.handleHeight       = this.handleEl.offsetHeight;
     }
 
     getAttributes() {
-        this.percent = parseInt(this.getAttribute("percent"));
-        this.refreshDisplayPercent();
+        this.percent    = parseInt(this.getAttribute("percent"));
+        if( isNaN(this.percent) ){ this.percent = 50; }
+        this.isGroup    = this.classList.contains("group");
+        this.name       = this.getAttribute("name");
+        this.notTeached = this.classList.contains("notTeached");
+
+        this.nameHolder.innerHTML = this.name;
+        if( this.isGroup ){
+            this.nameHolder.setAttribute("lang","groupShader");
+        }
+        setTimeout(() => {
+            this.refreshDisplayPercent();
+        }, 100);
     }
 
     addTemplate() {
@@ -49,6 +90,7 @@ class hsShader extends HTMLElement {
         let self = this;
         ['drag', 'touchmove'].forEach(evt =>
             self.handleEl.addEventListener(evt, function (e) {
+                if( self.notTeached ){ return; }
                 const target = e.target.parentElement;
                 const rect = target.getBoundingClientRect();
                 let relativeTop;
@@ -63,17 +105,36 @@ class hsShader extends HTMLElement {
 
         ['dragstart', 'touchstart', "click"].forEach(evt =>
             self.handleEl.addEventListener(evt, function (e) {
-                //self.indicatorEl.classList.add("show");
-                e.dataTransfer.setData('application/node type', this);
+                let body = self.handleEl.closest(".hshModalBody");
+                if( body ){ body.style.overflow = "hidden"; }
+                if( e.type == "click" ){ return; }
+                self.setAttribute("touching",true);
+                e.dataTransfer.setDragImage(document.createElement('span'), 0, 0);
+                //e.dataTransfer.setData('jkhbku', 'anything');
                 window.getSelection().removeAllRanges();
                 return false;
             }, false)
         );
-        // ['dragend', 'touchend', "touchcancel"].forEach(evt =>
-        //     self.handleEl.addEventListener(evt, function (e) {
-        //         self.indicatorEl.classList.remove("show");
-        //     }, false)
-        // );
+
+        ['dragend', 'touchend'].forEach(evt =>
+            self.handleEl.addEventListener(evt, function (e) {
+                if( self.userEvents.stop !== null ){
+                    self.userEvents.stop(self.percent);
+                }
+                let body = self.handleEl.closest(".hshModalBody");
+                if( body ){ body.style.overflow = "auto"; }
+                self.setAttribute("touching",false);
+                return false;
+            }, false)
+        );
+    }
+
+    scale (number, inMin, inMax, outMin, outMax) {
+        return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+    }
+
+    getReversePercent(){
+        return this.scale(this.percent,100,0,0,100);
     }
 
     getPosPixel() {
@@ -82,25 +143,33 @@ class hsShader extends HTMLElement {
     }
 
     getPosPercent(pixel) {
-        return Math.round( (100 / this.offsetHeight) * pixel);
+        let rawPercent = (100 / this.offsetHeight) * pixel;
+        // Don't want to deal with float
+        return Math.round( rawPercent );
     }
 
     refreshDisplayPercent() {
         this.upperHalfEl.style.height   = `${this.percent}%`;
         this.handleEl.style.top         = `${this.getPosPixel()}px`;
-        this.percentHolderEl.innerText  = `${this.percent}%`;
-        //this.indicatorEl.innerHTML      = `${this.percent}%`;
+        if( this.notTeached ){
+            this.percentHolderEl.innerText  = `-`;
+        }else{
+            this.percentHolderEl.innerText  = `${this.percent}%`;
+        }
     }
 
     updateDisplayPixel(pixel) {
         if (pixel < 0 || pixel > this.offsetHeight) { return; }
         let percent = this.getPosPercent(pixel);
-        let posPercentString = `${percent}%`
+        this.percent = percent;
+        let posPercentString = `${this.percent}%`
         this.upperHalfEl.style.height   = `${pixel}px`;
         this.handleEl.style.top         = `${pixel - (this.handleHeight / 2)}px`;
-        //this.indicatorEl.innerHTML      = posPercentString;
         this.percentHolderEl.innerText  = posPercentString;
-        this.percent = percent;
+        
+        if( this.userEvents.drag !== null ){
+            this.userEvents.drag(this.percent);
+        }
     }
 
     setPercent(percent) {
@@ -109,41 +178,72 @@ class hsShader extends HTMLElement {
             return;
         }
         this.percent = percent;
-        this.updateDisplayPixel();
+        this.refreshDisplayPercent();
     }
 };
 customElements.define('hs-shader', hsShader);
 
-/* TEST */
-
-let shaders = document.querySelectorAll("hs-shader");
-
-let testPercent = 5;
-let interval, intervalTwo;
-
-for (let shader of shaders) {
-    if (!shader) { continue; }
-    //setIntervalToHundread(shader);
-}
-
-function setIntervalToHundread(shader) {
-    interval = setInterval(function () {
-        shader.setPercent(testPercent);
-        testPercent = testPercent + 1;
-        if (testPercent >= 100) {
-            clearInterval(interval);
-            setIntervalToZero(shader);
+/*
+*   There is a bug in firefox where you can not get user pointers
+*       inside drag event handlers. This function is intended to
+*       fix this error.
+*   It first checks if we are in firefox so it will not act if it
+*       does not a firefox browser.
+*   Please note, it isn't an exact fix. x / y coordinates might
+*       be slightly off.
+*   Since 'drag' event occurs before 'dragover', it executes
+*       with the coordinates from the previous event frame.
+*/
+function patchFireFoxEventHandler(){
+    if(/Firefox\/\d+[\d\.]*/.test(navigator.userAgent)
+            && typeof window.DragEvent === 'function'
+            && typeof window.addEventListener === 'function') (function(){
+        // patch for Firefox bug https://bugzilla.mozilla.org/show_bug.cgi?id=505521
+        var cx, cy, px, py, ox, oy, sx, sy, lx, ly;
+        function update(e) {
+            cx = e.clientX; cy = e.clientY;
+            px = e.pageX;   py = e.pageY;
+            ox = e.offsetX; oy = e.offsetY;
+            sx = e.screenX; sy = e.screenY;
+            lx = e.layerX;  ly = e.layerY;
         }
-    }, 20);
-}
-
-function setIntervalToZero(shader) {
-    intervalTwo = setInterval(function () {
-        shader.setPercent(testPercent);
-        testPercent = testPercent - 1;
-        if (testPercent <= 0) {
-            clearInterval(intervalTwo);
-            setIntervalToHundread(shader);
+        function assign(e) {
+            e._ffix_cx = cx; e._ffix_cy = cy;
+            e._ffix_px = px; e._ffix_py = py;
+            e._ffix_ox = ox; e._ffix_oy = oy;
+            e._ffix_sx = sx; e._ffix_sy = sy;
+            e._ffix_lx = lx; e._ffix_ly = ly;
         }
-    }, 30);
+        window.addEventListener('mousemove', update, true);
+        window.addEventListener('dragover', update, true);
+        // bug #505521 identifies these three listeners as problematic:
+        // (although tests show 'dragstart' seems to work now, keep to be compatible)
+        window.addEventListener('dragstart', assign, true);
+        window.addEventListener('drag', assign, true);
+        window.addEventListener('dragend', assign, true);
+
+        var me = Object.getOwnPropertyDescriptors(window.MouseEvent.prototype),
+            ue = Object.getOwnPropertyDescriptors(window.UIEvent.prototype);
+        function getter(prop,repl) {
+            return function() {return me[prop] && me[prop].get.call(this) || Number(this[repl]) || 0};
+        }
+        function layerGetter(prop,repl) {
+            return function() {return this.type === 'dragover' && ue[prop] ? ue[prop].get.call(this) : (Number(this[repl]) || 0)};
+        }
+        Object.defineProperties(window.DragEvent.prototype,{
+            clientX: {get: getter('clientX', '_ffix_cx')},
+            clientY: {get: getter('clientY', '_ffix_cy')},
+            pageX:   {get: getter('pageX', '_ffix_px')},
+            pageY:   {get: getter('pageY', '_ffix_py')},
+            offsetX: {get: getter('offsetX', '_ffix_ox')},
+            offsetY: {get: getter('offsetY', '_ffix_oy')},
+            screenX: {get: getter('screenX', '_ffix_sx')},
+            screenY: {get: getter('screenY', '_ffix_sy')},
+            x:       {get: getter('x', '_ffix_cx')},
+            y:       {get: getter('y', '_ffix_cy')},
+            layerX:  {get: layerGetter('layerX', '_ffix_lx')},
+            layerY:  {get: layerGetter('layerY', '_ffix_ly')}
+        });
+    })();
 }
+patchFireFoxEventHandler();
