@@ -28,6 +28,10 @@ hs-shader {
     margin: 5px 5px 35px;
 }
 
+body.dark-theme hs-shader {
+    box-shadow: rgb(0 0 0 / 50%) 0 4px 12px;
+}
+
 .hs-shader-upper {
     display: block;
     width: 100%;

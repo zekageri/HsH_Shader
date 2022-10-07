@@ -59,7 +59,6 @@ class hsShader extends HTMLElement {
         this.upperHalfEl        = this.querySelector(".hs-shader-upper");
         this.percentHolderEl    = this.querySelector(".hs-shader-percent-holder");
         this.nameHolder         = this.querySelector(".hs-shader-name");
-        //this.handleHeight       = this.handleEl.offsetHeight;
     }
 
     getAttributes() {
@@ -91,6 +90,7 @@ class hsShader extends HTMLElement {
         let self = this;
         ['mouseup', 'touchend'].forEach(evt =>
             self.addEventListener(evt, function (e) {
+                if( self.notTeached ){ return; }
                 let relativeTop = 0;
                 const rect = self.getBoundingClientRect();
                 if( e.type == "mouseup" ){
@@ -125,17 +125,13 @@ class hsShader extends HTMLElement {
 
         ['dragstart', 'touchstart', "click"].forEach(evt =>
             self.handleEl.addEventListener(evt, function (e) {
-<<<<<<< HEAD
+                if( self.notTeached ){ return; }
                 let body = self.handleEl.closest(".hshModalBody");
                 if( body ){ body.style.overflow = "hidden"; }
                 if( e.type == "click" ){ return; }
                 self.setAttribute("touching",true);
                 e.dataTransfer.setDragImage(document.createElement('span'), 0, 0);
                 //e.dataTransfer.setData('jkhbku', 'anything');
-=======
-                //self.indicatorEl.classList.add("show");
-                //e.dataTransfer.setData('application/node type', this);
->>>>>>> 8dfe25e563569fea71c98af0d0a837b275aaeefd
                 window.getSelection().removeAllRanges();
                 return false;
             }, false)
@@ -143,8 +139,9 @@ class hsShader extends HTMLElement {
 
         ['dragend', 'touchend'].forEach(evt =>
             self.handleEl.addEventListener(evt, function (e) {
+                if( self.notTeached ){ return; }
                 if( self.userEvents.stop !== null ){
-                    self.userEvents.stop(self.percent);
+                    self.userEvents.stop(self.getReversePercent());
                 }
                 let body = self.handleEl.closest(".hshModalBody");
                 if( body ){ body.style.overflow = "auto"; }
@@ -168,13 +165,9 @@ class hsShader extends HTMLElement {
     }
 
     getPosPercent(pixel) {
-<<<<<<< HEAD
         let rawPercent = (100 / this.offsetHeight) * pixel;
         // Don't want to deal with float
         return Math.round( rawPercent );
-=======
-        return this.clamp( Math.round( (100 / this.offsetHeight) * pixel) );
->>>>>>> 8dfe25e563569fea71c98af0d0a837b275aaeefd
     }
 
     refreshDisplayPercent() {
@@ -183,7 +176,7 @@ class hsShader extends HTMLElement {
         if( this.notTeached ){
             this.percentHolderEl.innerText  = `-`;
         }else{
-            this.percentHolderEl.innerText  = `${this.percent}%`;
+            this.percentHolderEl.innerText  = `${this.getReversePercent()}%`;
         }
     }
 
@@ -191,13 +184,13 @@ class hsShader extends HTMLElement {
         if (pixel < 0 || pixel > this.offsetHeight) { return; }
         let percent = this.getPosPercent(pixel);
         this.percent = percent;
-        let posPercentString = `${this.percent}%`
+        let posPercentString = `${this.getReversePercent()}%`
         this.upperHalfEl.style.height   = `${pixel}px`;
         this.handleEl.style.top         = `${pixel - (this.handleHeight / 2)}px`;
         this.percentHolderEl.innerText  = posPercentString;
         
         if( this.userEvents.drag !== null ){
-            this.userEvents.drag(this.percent);
+            this.userEvents.drag(this.getReversePercent());
         }
     }
 
@@ -209,8 +202,7 @@ class hsShader extends HTMLElement {
         if (percent > 100 || percent < 0) {
             console.error("[HSH-Shader] - Percent must be between 0 and 100%!");
         }
-<<<<<<< HEAD
-        this.percent = percent;
+        this.percent = this.scale(percent,100,0,0,100);;
         this.refreshDisplayPercent();
     }
 };
@@ -280,10 +272,3 @@ function patchFireFoxEventHandler(){
     })();
 }
 patchFireFoxEventHandler();
-=======
-        this.percent = this.clamp(percent,0,100);
-        this.refreshDisplayPercent();
-    }
-};
-customElements.define('hs-shader', hsShader);
->>>>>>> 8dfe25e563569fea71c98af0d0a837b275aaeefd
