@@ -119,6 +119,7 @@ class hsShader extends HTMLElement {
                     relativeTop = e.touches[0].pageY - rect.top
                 }
                 self.updateDisplayPixel(relativeTop);
+                e.preventDefault();
                 return false;
             }, false)
         );
@@ -126,8 +127,14 @@ class hsShader extends HTMLElement {
         ['dragstart', 'touchstart', "click"].forEach(evt =>
             self.handleEl.addEventListener(evt, function (e) {
                 if( self.notTeached ){ return; }
-                let body = self.handleEl.closest(".hshModalBody");
-                if( body ){ body.style.overflow = "hidden"; }
+                let hshModalBody = self.handleEl.closest(".hshModalBody");
+                if( hshModalBody ){ hshModalBody.style.overflow = "hidden"; }
+                let body = self.handleEl.closest("body");
+                if( body ){
+                    body.style["overscroll-behavior"] = "contain";
+                    body.style["touch-action"] = "none";
+                }
+
                 if( e.type == "click" ){ return; }
                 self.setAttribute("touching",true);
                 e.dataTransfer.setDragImage(document.createElement('span'), 0, 0);
@@ -143,8 +150,12 @@ class hsShader extends HTMLElement {
                 if( self.userEvents.stop !== null ){
                     self.userEvents.stop(self.getReversePercent());
                 }
-                let body = self.handleEl.closest(".hshModalBody");
-                if( body ){ body.style.overflow = "auto"; }
+                let hshModalBody = self.handleEl.closest(".hshModalBody");
+                if( hshModalBody ){ hshModalBody.style.overflow = "auto"; }
+                let body = self.handleEl.closest("body");
+                if( body ){
+                    body.style["touch-action"] = "auto";
+                }
                 self.setAttribute("touching",false);
                 return false;
             }, false)
